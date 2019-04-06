@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Net;
+using IPWhitelist.Extensions;
 
 namespace IPWhitelist.Models
 {
@@ -16,8 +17,11 @@ namespace IPWhitelist.Models
 
         public bool ValidAddresses()
         {
-            IPAddress address;
-            return IPAddress.TryParse(StartAddress, out address) && IPAddress.TryParse(EndAddress, out address);
+            IPAddress startAddress;
+            IPAddress endAddress;
+            if (IPAddress.TryParse(StartAddress, out startAddress) && IPAddress.TryParse(EndAddress, out endAddress))
+                return StartAddress.LessOrEqualTo(EndAddress);
+            return false;
         }
     }
 }
