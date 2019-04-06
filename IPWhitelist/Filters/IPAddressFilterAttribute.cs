@@ -15,11 +15,11 @@ namespace IPWhitelist.Filters
 {
     public class IPAddressFilterAttribute : ActionFilterAttribute
     {
-        private readonly IPAddressesContext dbContext;
+        private Dictionary<string, IPAddressRange> cache;
 
         public IPAddressFilterAttribute()
         {
-            dbContext = new IPAddressesContext();
+            cache = new Dictionary<string, IPAddressRange>();
         }
 
         public override Task OnActionExecutingAsync(HttpActionContext actionContext, CancellationToken cancellationToken)
@@ -27,22 +27,23 @@ namespace IPWhitelist.Filters
             return Task.Run(() => 
             {
                 var ipAddress = GetClientIpAddress(actionContext.Request);
-                foreach(IPAddressRange range in dbContext.Ranges)
+                IPAddressRange res;
+                if (cache.TryGetValue(ipAddress, out res))
                 {
-                    if (ipAddress.MoreOrEqualTo(range.StartAddress) && ipAddress.LessOrEqualTo(range.EndAddress))
-                        return;
+                    return;
+                }
+                using (var dbContext = new IPAddressesContext())
+                {
+                    foreach (IPAddressRange range in dbContext.Ranges)
+                    {
+                        if (ipAddress.MoreOrEqualTo(range.StartAddress) && ipAddress.LessOrEqualTo(range.EndAddress))
+                        {
+                            cache.Add(ipAddress, range);
+                            return;
+                        }
+                    }
                 }
                 actionContext.Response = new HttpResponseMessage(HttpStatusCode.NotFound);
-                //if (!dbContext.Ranges.Any(r => ipAddress.MoreOrEqualTo(r.StartAddress) && ipAddress.LessOrEqualTo(r.EndAddress)))
-                //    actionContext.Response = new HttpResponseMessage(HttpStatusCode.NotFound);
-            });
-        }
-
-        public override Task OnActionExecutedAsync(HttpActionExecutedContext actionExecutedContext, CancellationToken cancellationToken)
-        {
-            return Task.Run(() => 
-            {
-
             });
         }
 
@@ -50,10 +51,9 @@ namespace IPWhitelist.Filters
         {
             if (request.Properties.ContainsKey("MS_HttpContext"))
             {
-                string ip = ((HttpContextBase)request.Properties["MS_HttpContext"]).Request.UserHostAddress;
-                if (ip == "::1")
-                    return "127.0.0.1";
-                return ip;
+                string ipString = ((HttpContextBase)request.Properties["MS_HttpContext"]).Request.UserHostAddress;
+                IPAddress ipAddress = IPAddress.Parse(ipString);
+                return ipAddress.MapToIPv4().ToString();
             }
             return string.Empty;
         }
