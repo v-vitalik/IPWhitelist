@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Description;
 using IPWhitelist.Models;
+using IPWhitelist.Cache;
 
 namespace IPWhitelist.Controllers
 {
@@ -56,6 +57,7 @@ namespace IPWhitelist.Controllers
             try
             {
                 await db.SaveChangesAsync();
+                MemoryCacher.UpdateOrDelete(iPAddressRange);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -103,7 +105,10 @@ namespace IPWhitelist.Controllers
             }
 
             db.Ranges.Remove(iPAddressRange);
+
             await db.SaveChangesAsync();
+
+            MemoryCacher.DeleteIfContains(iPAddressRange);
 
             return Ok(iPAddressRange);
         }

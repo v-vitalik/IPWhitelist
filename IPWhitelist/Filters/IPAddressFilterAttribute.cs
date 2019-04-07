@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http.Controllers;
@@ -10,25 +7,18 @@ using IPWhitelist.Models;
 using System.Net.Http;
 using System.Net;
 using IPWhitelist.Extensions;
+using IPWhitelist.Cache;
 
 namespace IPWhitelist.Filters
 {
     public class IPAddressFilterAttribute : ActionFilterAttribute
     {
-        private Dictionary<string, IPAddressRange> cache;
-
-        public IPAddressFilterAttribute()
-        {
-            cache = new Dictionary<string, IPAddressRange>();
-        }
-
         public override Task OnActionExecutingAsync(HttpActionContext actionContext, CancellationToken cancellationToken)
         {
             return Task.Run(() => 
             {
                 var ipAddress = GetClientIpAddress(actionContext.Request);
-                IPAddressRange res;
-                if (cache.TryGetValue(ipAddress, out res))
+                if (MemoryCacher.Contains(ipAddress))
                 {
                     return;
                 }
@@ -38,7 +28,7 @@ namespace IPWhitelist.Filters
                     {
                         if (ipAddress.MoreOrEqualTo(range.StartAddress) && ipAddress.LessOrEqualTo(range.EndAddress))
                         {
-                            cache.Add(ipAddress, range);
+                            MemoryCacher.Add(ipAddress, range);
                             return;
                         }
                     }
