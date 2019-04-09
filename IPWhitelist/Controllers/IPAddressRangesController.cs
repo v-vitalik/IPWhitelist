@@ -7,6 +7,8 @@ using System.Web.Http;
 using System.Web.Http.Description;
 using IPWhitelist.Models;
 using IPWhitelist.Cache;
+using IPWhitelist.Extensions;
+using System.Collections.Generic;
 
 namespace IPWhitelist.Controllers
 {
@@ -15,22 +17,37 @@ namespace IPWhitelist.Controllers
         private IPAddressesContext db = new IPAddressesContext();
 
         // GET: api/IPAddressRanges
-        public IQueryable<IPAddressRange> GetIPAddressRanges()
+        public IEnumerable<IPAddressRange> GetIPAddressRanges()
         {
-            return db.Ranges;
+
+            return db.WhitelistIPs.ToList().Select(i => new IPAddressRange
+            {
+                Id = i.Id,
+                StartAddress = i.StartIP.IPAddressToString(),
+                EndAddress = i.EndIP.IPAddressToString(),
+                IsActive = i.IsActive,
+                RuleName = i.RuleName
+            });
         }
 
         // GET: api/IPAddressRanges/5
         [ResponseType(typeof(IPAddressRange))]
         public async Task<IHttpActionResult> GetIPAddressRange(int id)
         {
-            IPAddressRange iPAddressRange = await db.Ranges.FindAsync(id);
-            if (iPAddressRange == null)
+            WhitelistIP whitelistIP = await db.WhitelistIPs.FindAsync(id);
+            if (whitelistIP == null)
             {
                 return NotFound();
             }
 
-            return Ok(iPAddressRange);
+            return Ok(new IPAddressRange
+            {
+                Id = whitelistIP.Id,
+                StartAddress = whitelistIP.StartIP.IPAddressToString(),
+                EndAddress = whitelistIP.EndIP.IPAddressToString(),
+                IsActive = whitelistIP.IsActive,
+                RuleName = whitelistIP.RuleName
+            });
         }
 
         // PUT: api/IPAddressRanges/5
@@ -51,8 +68,15 @@ namespace IPWhitelist.Controllers
             {
                 return BadRequest();
             }
-
-            db.Entry(iPAddressRange).State = EntityState.Modified;
+            WhitelistIP whitelistIP = new WhitelistIP()
+            {
+                Id = iPAddressRange.Id,
+                RuleName = iPAddressRange.RuleName,
+                StartIP = iPAddressRange.StartAddress.GetBytes(),
+                EndIP = iPAddressRange.EndAddress.GetBytes(),
+                IsActive = iPAddressRange.IsActive
+            };
+            db.Entry(whitelistIP).State = EntityState.Modified;
 
             try
             {
@@ -88,7 +112,15 @@ namespace IPWhitelist.Controllers
                 return BadRequest();
             }
 
-            db.Ranges.Add(iPAddressRange);
+            WhitelistIP whitelistIP = new WhitelistIP()
+            {
+                RuleName = iPAddressRange.RuleName,
+                StartIP = iPAddressRange.StartAddress.GetBytes(),
+                EndIP = iPAddressRange.EndAddress.GetBytes(),
+                IsActive = iPAddressRange.IsActive
+            };
+
+            db.WhitelistIPs.Add(whitelistIP);
             await db.SaveChangesAsync();
 
             return CreatedAtRoute("DefaultApi", new { id = iPAddressRange.Id }, iPAddressRange);
@@ -98,15 +130,24 @@ namespace IPWhitelist.Controllers
         [ResponseType(typeof(IPAddressRange))]
         public async Task<IHttpActionResult> DeleteIPAddressRange(int id)
         {
-            IPAddressRange iPAddressRange = await db.Ranges.FindAsync(id);
-            if (iPAddressRange == null)
+            WhitelistIP whitelistIP = await db.WhitelistIPs.FindAsync(id);
+            if (whitelistIP == null)
             {
                 return NotFound();
             }
 
-            db.Ranges.Remove(iPAddressRange);
+            db.WhitelistIPs.Remove(whitelistIP);
 
             await db.SaveChangesAsync();
+
+            IPAddressRange iPAddressRange = new IPAddressRange
+            {
+                Id = whitelistIP.Id,
+                StartAddress = whitelistIP.StartIP.IPAddressToString(),
+                EndAddress = whitelistIP.EndIP.IPAddressToString(),
+                IsActive = whitelistIP.IsActive,
+                RuleName = whitelistIP.RuleName
+            };
 
             MemoryCacher.DeleteIfContains(iPAddressRange);
 
@@ -124,7 +165,7 @@ namespace IPWhitelist.Controllers
 
         private bool IPAddressRangeExists(int id)
         {
-            return db.Ranges.Count(e => e.Id == id) > 0;
+            return db.WhitelistIPs.Count(e => e.Id == id) > 0;
         }
     }
 }

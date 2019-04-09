@@ -9,11 +9,13 @@ namespace IPWhitelist.Models
         [Key]
         public int Id { get; set; }
 
-        public string Name { get; set; }
+        public string RuleName { get; set; }
 
         public string StartAddress { get; set; }
 
         public string EndAddress { get; set; }
+        
+        public bool IsActive { get; set; }
 
         public bool ValidAddresses()
         {

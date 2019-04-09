@@ -30,9 +30,9 @@ namespace IPWhitelist.Cache
             {
                 if (ipRange.Id == range.Value.Id)
                 {
-                    if (range.Key.MoreOrEqualTo(ipRange.StartAddress) && range.Key.LessOrEqualTo(ipRange.EndAddress))
+                    if (range.Key.MoreOrEqualTo(ipRange.StartAddress) && range.Key.LessOrEqualTo(ipRange.EndAddress) && ipRange.IsActive)
                     {
-                        range.Value.Name = ipRange.Name;
+                        range.Value.RuleName = ipRange.RuleName;
                         range.Value.StartAddress = ipRange.StartAddress;
                         range.Value.EndAddress = ipRange.EndAddress;
                     }

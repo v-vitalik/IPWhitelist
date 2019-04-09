@@ -8,6 +8,10 @@ using System.Net.Http;
 using System.Net;
 using IPWhitelist.Extensions;
 using IPWhitelist.Cache;
+using System.Linq;
+using System.Text;
+using System;
+using System.Data.SqlClient;
 
 namespace IPWhitelist.Filters
 {
@@ -22,18 +26,36 @@ namespace IPWhitelist.Filters
                 {
                     return;
                 }
-                using (var dbContext = new IPAddressesContext())
+                string connectionString = "Data Source=.\\SQLEXPRESS;Initial Catalog=IPWhitelist.Models.IPAddressesContext;Integrated Security=True;";
+                string query = "SELECT Id, StartIP, EndIP, IsActive FROM [dbo].[WhitelistIPs] WHERE @IP >= StartIP AND @IP <= EndIP AND IsActive = 1";
+                using(SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    foreach (IPAddressRange range in dbContext.Ranges)
+                    SqlCommand command = new SqlCommand(query, connection);
+                    command.Parameters.AddWithValue("@IP", ipAddress.GetBytes());
+                    connection.Open();
+                    SqlDataReader reader = command.ExecuteReader();
+                    try
                     {
-                        if (ipAddress.MoreOrEqualTo(range.StartAddress) && ipAddress.LessOrEqualTo(range.EndAddress))
+                        while (reader.Read())
                         {
-                            MemoryCacher.Add(ipAddress, range);
+                            IPAddressRange ip = new IPAddressRange()
+                            {
+                                Id = (int)reader["Id"],
+                                StartAddress = (reader["StartIP"] as byte[]).IPAddressToString(),
+                                EndAddress = (reader["EndIP"] as byte[]).IPAddressToString(),
+                                IsActive = (bool)reader["IsActive"]
+                            };
+                            MemoryCacher.Add(ipAddress, ip);
                             return;
                         }
                     }
+                    finally
+                    {
+                        reader.Close();
+                    }
                 }
-                actionContext.Response = new HttpResponseMessage(HttpStatusCode.NotFound);
+                actionContext.Response = new HttpResponseMessage(HttpStatusCode.Forbidden);
+                actionContext.Response.ReasonPhrase = "IP Address is not allowed";
             });
         }
 

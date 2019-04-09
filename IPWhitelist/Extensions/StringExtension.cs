@@ -1,4 +1,6 @@
-﻿namespace IPWhitelist.Extensions
+﻿using System;
+
+namespace IPWhitelist.Extensions
 {
     public static class StringExtension
     {
@@ -24,6 +26,17 @@
                     return false;
             }
             return true;
+        }
+
+        public static byte[] GetBytes(this string address)
+        {
+            byte[] res = new byte[4];
+            var numbers = address.Split('.');
+            for (int i = 0; i < numbers.Length; i++)
+            {
+                res[i] = BitConverter.GetBytes(int.Parse(numbers[i]))[0];
+            }
+            return res;
         }
     }
 }

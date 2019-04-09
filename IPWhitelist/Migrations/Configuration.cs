@@ -15,9 +15,9 @@ namespace IPWhitelist.Migrations
 
         protected override void Seed(IPAddressesContext context)
         {
-            context.Ranges.AddOrUpdate(x => x.Id,
-                new IPAddressRange() { Id = 1, Name = "Range1", StartAddress = "198.55.55.55", EndAddress = "198.55.55.60" },
-                new IPAddressRange() { Id = 2, Name = "Range2", StartAddress = "198.55.55.125", EndAddress = "198.55.55.160" });
+            //context.Ranges.AddOrUpdate(x => x.Id,
+            //    new IPAddressRange() { Id = 1, Name = "Range1", StartAddress = "198.55.55.55", EndAddress = "198.55.55.60" },
+            //    new IPAddressRange() { Id = 2, Name = "Range2", StartAddress = "198.55.55.125", EndAddress = "198.55.55.160" });
         }
     }
 }

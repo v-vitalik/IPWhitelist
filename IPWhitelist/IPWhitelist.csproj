@@ -182,6 +182,7 @@
     <Compile Include="Cache\MemoryCacher.cs" />
     <Compile Include="Controllers\IPAddressRangesController.cs" />
     <Compile Include="Controllers\ValuesController.cs" />
+    <Compile Include="Extensions\ByteArrayExtension.cs" />
     <Compile Include="Extensions\StringExtension.cs" />
     <Compile Include="Filters\IPAddressFilterAttribute.cs" />
     <Compile Include="Global.asax.cs">
@@ -195,9 +196,14 @@
     <Compile Include="Migrations\201904052115234_Initial1.Designer.cs">
       <DependentUpon>201904052115234_Initial1.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201904091355400_WhitelistIPs.cs" />
+    <Compile Include="Migrations\201904091355400_WhitelistIPs.Designer.cs">
+      <DependentUpon>201904091355400_WhitelistIPs.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\IPAddressesContext.cs" />
     <Compile Include="Models\IPAddressRange.cs" />
+    <Compile Include="Models\WhitelistIP.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -221,11 +227,15 @@
     <EmbeddedResource Include="Migrations\201904052115234_Initial1.resx">
       <DependentUpon>201904052115234_Initial1.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201904091355400_WhitelistIPs.resx">
+      <DependentUpon>201904091355400_WhitelistIPs.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config">
       <SubType>Designer</SubType>
     </Content>
+    <Content Include="ClassDiagram1.cd" />
     <None Include="Project_Readme.html" />
   </ItemGroup>
   <PropertyGroup>
